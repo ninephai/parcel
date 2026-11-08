@@ -825,23 +825,15 @@ function seedSample() {
  * รับ Request จาก GitHub Pages (Frontend)
  */
 function doPost(e) {
-  try {
-    // 1. รับและแปลงข้อมูลที่ส่งมาจาก fetch() 
-    var req = JSON.parse(e.postData.contents);
-    
-    // 2. เรียกฟังก์ชัน api() ที่คุณมีอยู่แล้วทำงาน
-    var result = api(req.token, req.action, req.payload);
-    
-    // 3. ส่งผลลัพธ์กลับไปยัง Frontend เป็นรูปแบบ JSON
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, data: result }))
-                         .setMimeType(ContentService.MimeType.JSON);
-                         
-  } catch (err) {
-    // จัดการ Error เช่น Token หมดอายุ หรือข้อผิดพลาดอื่นๆ
-    var code = (err.message && err.message.indexOf('AUTH') > -1) ? 'AUTH' : 'ERROR';
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message, code: code }))
-                         .setMimeType(ContentService.MimeType.JSON);
-  }
+  // 1. รับและแปลงข้อมูลที่ส่งมาจาก fetch() บน GitHub
+  var req = JSON.parse(e.postData.contents);
+  
+  // 2. เรียกฟังก์ชัน api() ซึ่งโค้ดเดิมจัดการโครงสร้าง {ok, data, error} ไว้สมบูรณ์แล้ว
+  var result = api(req.token, req.action, req.payload);
+  
+  // 3. ส่งผลลัพธ์กลับไปยังเบราว์เซอร์โดยตรง ไม่ต้องห่อซ้ำ
+  return ContentService.createTextOutput(JSON.stringify(result))
+                       .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
