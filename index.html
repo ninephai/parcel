@@ -156,6 +156,29 @@ body{background:var(--bg);color:var(--ink);font-size:14.5px;min-height:100vh}
 *::-webkit-scrollbar-thumb:hover{background:#718096}
 *::-webkit-scrollbar-corner{background:transparent}
 #side::-webkit-scrollbar-track{background:transparent}#side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25)}
+
+/* ========== UX/UI Improvements for All Devices ========== */
+#sidebar-overlay { position: fixed; inset: 0; background: rgba(7, 28, 77, 0.4); z-index: 1035; display: none; opacity: 0; transition: opacity 0.3s; backdrop-filter: blur(2px); }
+#sidebar-overlay.show { opacity: 1; }
+.fab-scan { position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: var(--navy); display: none; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 6px 16px rgba(242, 183, 5, 0.4); cursor: pointer; z-index: 1020; transition: 0.2s; border: none; }
+.fab-scan:active { transform: scale(0.92); box-shadow: 0 3px 8px rgba(242, 183, 5, 0.4); }
+.table-responsive { -webkit-overflow-scrolling: touch; border-radius: 8px; }
+
+@media(max-width: 991px) {
+    #top { height: 72px; padding: 0 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+    #main { padding: 90px 12px 90px; }
+    .fab-scan { display: flex; }
+    .sb-qr { display: none; }
+    .pghead { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .pghead .d-flex { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
+}
+@media(max-width: 767px) {
+    .gx { gap: 12px; }
+    .kc { padding: 16px; }
+    .kv { font-size: 22px; }
+    .card-body { padding: 12px; }
+    .btn-sm { padding: 0.4rem 0.6rem; font-size: 13.5px; }
+}
 </style>
 </head>
 <body>
@@ -185,7 +208,7 @@ body{background:var(--bg);color:var(--ink);font-size:14.5px;min-height:100vh}
   <div class="sb-qr" onclick="go(ONLY.scan.indexOf(S.user.role)>=0?'scan':'qr')"><div class="qb"><i class="fa-solid fa-qrcode"></i></div><div><b>สแกน QR</b><small>ตรวจสอบข้อมูลครุภัณฑ์</small></div><span class="wz">🧙</span></div>
  </nav>
  <header id="top">
-  <button class="btn btn-light d-lg-none" onclick="q('#side').classList.toggle('open')"><i class="fa-solid fa-bars"></i></button>
+  <button class="btn btn-light d-lg-none border-0 shadow-sm" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
   <div class="hb-t"><h1 id="hTitle">Dashboard</h1><div id="hSub"></div></div>
   <div class="dtc"><i class="fa-regular fa-calendar-days"></i><div><b id="dtDate"></b><small id="dtTime"></small></div></div>
   <button class="bell" onclick="go('alerts')" title="แจ้งเตือน"><i class="fa-solid fa-bell"></i><span id="bell" class="badge bg-danger rounded-pill" style="display:none"></span></button>
@@ -197,6 +220,11 @@ body{background:var(--bg);color:var(--ink);font-size:14.5px;min-height:100vh}
   <div><b>TONPHAI IT</b> v1.0.0 &nbsp;|&nbsp; ระบบบริหารจัดการครุภัณฑ์และพัสดุ เทศบาลตำบลบึงโขงหลง</div>
   <div><span class="me-3"><i class="fa-solid fa-shield-halved"></i>ปลอดภัย 100%</span><span class="me-3"><i class="fa-solid fa-cloud"></i>ข้อมูลอยู่ในระบบของหน่วยงาน</span><span class="me-3"><i class="fa-regular fa-envelope"></i>ติดต่อผู้ดูแลระบบ</span><span><i class="fa-solid fa-wand-magic-sparkles"></i>สงวนลิขสิทธิ์ นายเกียรติอนันต์ สุกทน</span></div>
  </footer>
+ <!-- ส่วนที่เพิ่มมาใหม่สำหรับปรับปรุง Mobile UX -->
+ <div id="sidebar-overlay" onclick="toggleSidebar(true)"></div>
+ <button class="fab-scan d-lg-none" onclick="go(ONLY.scan.indexOf(S.user.role)>=0?'scan':'qr')" title="สแกน QR Code">
+   <i class="fa-solid fa-qrcode"></i>
+ </button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -328,6 +356,22 @@ function buildMenu() {
 }
 function togG(i) { q('#g_' + i).classList.toggle('open'); }
 const PG = {};
+
+// ฟังก์ชันควบคุม Sidebar แบบมี Backdrop
+function toggleSidebar(forceClose = false) {
+    const side = q('#side');
+    const overlay = q('#sidebar-overlay');
+    if (forceClose || side.classList.contains('open')) {
+        side.classList.remove('open');
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.style.display = 'none', 300);
+    } else {
+        side.classList.add('open');
+        overlay.style.display = 'block';
+        setTimeout(() => overlay.classList.add('show'), 10);
+    }
+}
+
 async function go(p) {
  stopCam && stopCam();
  S.charts.forEach(c => c.destroy()); S.charts = [];
@@ -335,7 +379,10 @@ async function go(p) {
  const m = q('#m_' + p); if (m) { m.classList.add('on'); const g = m.closest('.mgrp'); if (g) g.classList.add('open', 'hasact'); }
  if (p === 'dash') { q('#hTitle').textContent = 'ระบบบริหารจัดการครุภัณฑ์และพัสดุ'; q('#hSub').textContent = '"เทศบาลตำบลบึงโขงหลง"'; }
  else { q('#hTitle').textContent = TITLES[p] || p; q('#hSub').textContent = S.org || ''; }
- q('#side').classList.remove('open');
+ 
+ if (window.innerWidth <= 991) toggleSidebar(true);
+ else q('#side').classList.remove('open');
+ 
  try { await PG[p](); } catch (e) { fail(e); }
 }
 const main = h => q('#main').innerHTML = h;
@@ -807,7 +854,6 @@ async function editUser(id) {
  const r = await form({ title: id ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้', vals: cur || {}, fields: [{ k: 'Username', l: 'ชื่อผู้ใช้', req: 1 }, { k: 'FullName', l: 'ชื่อ-สกุล', req: 1 }, { k: 'Role', l: 'สิทธิ์', t: 'select', o: Object.keys(ROLE).map(r => [r, ROLE[r]]), req: 1 }, { k: 'DeptID', l: 'กองงาน', t: 'select', o: OD() }, { k: 'PhotoUrl', l: 'ลิงก์รูปโปรไฟล์ (PhotoUrl)', h: 'วางลิงก์รูปภาพจาก Google Drive หรือ URL สาธารณะ เว้นว่าง = ใช้ไอคอนเริ่มต้น', c: 12 }, { k: 'TelegramChatID', l: 'Telegram Chat ID (ถ้ามี)' }, { k: 'Status', l: 'สถานะ', t: 'select', o: [['ใช้งาน', 'ใช้งาน'], ['ระงับ', 'ระงับ']], d: 'ใช้งาน' }, { k: 'password', l: id ? 'รหัสผ่านใหม่ (เว้นว่าง = ไม่เปลี่ยน)' : 'รหัสผ่าน (≥ 8 ตัว)', t: 'password', req: !id, c: 12 }], save: d => { if (id) d.UserID = id; return call('userSave', { user: d }); } });
  if (r) {
   await reloadMaster();
-  // ถ้ารูปของตัวเองเปลี่ยน ให้อัปเดตทันที
   if (id && String(id) === String(S.user.id) && r.PhotoUrl !== undefined) {
    S.user.photoUrl = r.PhotoUrl || '';
    const av = q('#sbAv');
